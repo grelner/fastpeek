@@ -1,0 +1,14 @@
+[package]
+name = "fastpeek"
+version = "0.1.0"
+edition = "2021"
+authors = ["Christian Schjølberg <grelner@pm.me>"]
+repository = "https://github.com/grelner/fastpeek"
+
+readme = "README.md"
+keywords = ["iterator", "peek"]
+categories = []
+
+license = "MIT OR Apache-2.0"
+
+[dependencies]

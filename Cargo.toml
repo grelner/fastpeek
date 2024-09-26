@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Christian Schjølberg <grelner@pm.me>"]
 repository = "https://github.com/grelner/fastpeek"
+description = "Faster peekable iterators"
 
 readme = "README.md"
 keywords = ["iterator", "peek"]

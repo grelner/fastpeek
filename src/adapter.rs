@@ -98,10 +98,10 @@ impl<I: Iterator + Clone> PeekIter<'_, I> for CloningPeekableIter<I> {
     }
 }
 
-/// Provide [Peek] by using a similar strategy as [Peekable]. Since self is not mutable in [Peek::peek],
-/// this implementation eagerly fetches the value of next(). While this adapter defeats the main
-/// purpose of this crate, it may be useful in edge cases where you want to compose on [Peek] but
-/// have no other way of providing it.
+/// Provide [Peek] by using a similar strategy as [std::iter::Peekable]. Since self is not mutable
+/// in [Peek::peek], this implementation eagerly fetches the value of next(). While this adapter
+/// defeats the main purpose of this crate, it may be useful in edge cases where you want to compose
+/// on [Peek] but have no other way of providing it.
 pub struct PrefetchPeekableIter<I: Iterator> {
     inner: I,
     peeked: Option<I::Item>,
@@ -109,11 +109,8 @@ pub struct PrefetchPeekableIter<I: Iterator> {
 
 impl<I: Iterator> PrefetchPeekableIter<I> {
     pub fn new(mut inner: I) -> Self {
-        let peaked = inner.next();
-        Self {
-            inner,
-            peeked: peaked,
-        }
+        let peeked = inner.next();
+        Self { inner, peeked }
     }
 }
 

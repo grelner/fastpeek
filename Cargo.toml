@@ -4,11 +4,11 @@ version = "0.2.2"
 edition = "2021"
 authors = ["Christian Schjølberg <grelner@pm.me>"]
 repository = "https://github.com/grelner/fastpeek"
-description = "A different way to peek"
+description = "A different way to peek iterators"
 
 readme = "README.md"
 keywords = ["iterator", "peek"]
-categories = []
+categories = ["rust-patterns"]
 
 license = "MIT OR Apache-2.0"
 

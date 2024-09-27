@@ -1,5 +1,6 @@
-use crate::{Peek, PeekBack};
+use crate::{Peek, PeekBack, PeekIter};
 
+/// Convenience trait for creating a Peek adapter. It is implemented for all iterators.
 pub trait PeekAdapters: Iterator + Sized {
     fn cloning_peekable(self) -> CloningPeekableIter<Self> {
         CloningPeekableIter::new(self)
@@ -89,19 +90,30 @@ impl<I: DoubleEndedIterator + Clone> PeekBack<'_, I> for CloningPeekableIter<I> 
     }
 }
 
+impl<I: Iterator + Clone> PeekIter<'_, I> for CloningPeekableIter<I> {
+    type Iter = I;
+
+    fn peek_iter(&'_ self) -> Self::Iter {
+        self.inner.clone()
+    }
+}
+
 /// Provide [Peek] by using a similar strategy as [Peekable]. Since self is not mutable in [Peek::peek],
 /// this implementation eagerly fetches the value of next(). While this adapter defeats the main
 /// purpose of this crate, it may be useful in edge cases where you want to compose on [Peek] but
 /// have no other way of providing it.
 pub struct PrefetchPeekableIter<I: Iterator> {
     inner: I,
-    peaked: Option<I::Item>,
+    peeked: Option<I::Item>,
 }
 
 impl<I: Iterator> PrefetchPeekableIter<I> {
     pub fn new(mut inner: I) -> Self {
         let peaked = inner.next();
-        Self { inner, peaked }
+        Self {
+            inner,
+            peeked: peaked,
+        }
     }
 }
 
@@ -109,11 +121,11 @@ impl<I: Iterator> Iterator for PrefetchPeekableIter<I> {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.peaked.is_none() {
+        if self.peeked.is_none() {
             None
         } else {
             let mut result = self.inner.next();
-            std::mem::swap(&mut self.peaked, &mut result);
+            std::mem::swap(&mut self.peeked, &mut result);
             result
         }
     }
@@ -127,13 +139,13 @@ where
     type PeekItem = &'a I::Item;
 
     fn peek(&'a self) -> Option<Self::PeekItem> {
-        self.peaked.as_ref()
+        self.peeked.as_ref()
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{Peek, PeekAdapters, PeekBack};
+    use crate::{Peek, PeekAdapters, PeekBack, PeekIter};
 
     #[test]
     fn test_cloned() {
@@ -141,6 +153,14 @@ mod test {
         let mut i = vec.iter().cloning_peekable();
         assert_eq!(i.peek(), i.next());
         assert_eq!(i.peek_back(), i.next_back());
+    }
+
+    #[test]
+    fn test_cloned_iter() {
+        let i = vec![1, 2, 3].into_iter().cloning_peekable();
+        let peeked = i.peek_iter().collect::<Vec<_>>();
+
+        assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
     }
 
     #[test]

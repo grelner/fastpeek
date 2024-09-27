@@ -1,10 +1,10 @@
 [package]
 name = "fastpeek"
-version = "0.1.1"
+version = "0.2.1"
 edition = "2021"
 authors = ["Christian Schjølberg <grelner@pm.me>"]
 repository = "https://github.com/grelner/fastpeek"
-description = "Faster peekable iterators"
+description = "A different way to peek"
 
 readme = "README.md"
 keywords = ["iterator", "peek"]

@@ -146,7 +146,7 @@ mod test {
 
     #[test]
     fn test_cloned() {
-        let vec = vec![1, 2, 3];
+        let vec = [1, 2, 3];
         let mut i = vec.iter().cloning_peekable();
         assert_eq!(i.peek(), i.next());
         assert_eq!(i.peek_back(), i.next_back());
@@ -154,7 +154,7 @@ mod test {
 
     #[test]
     fn test_cloned_iter() {
-        let i = vec![1, 2, 3].into_iter().cloning_peekable();
+        let i = [1, 2, 3].into_iter().cloning_peekable();
         let peeked = i.peek_iter().collect::<Vec<_>>();
 
         assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
@@ -162,7 +162,7 @@ mod test {
 
     #[test]
     fn test_prefetch() {
-        let vec = vec![1, 2, 3];
+        let vec = [1, 2, 3];
         let mut i = vec.into_iter().prefetch_peekable();
         assert_eq!(i.peek().cloned(), i.next());
     }

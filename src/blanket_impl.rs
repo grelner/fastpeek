@@ -1,7 +1,5 @@
 use crate::{Peek, PeekBack, PeekIter};
-pub struct Owned;
-pub struct Borrowed;
-impl<'a, T, I> Peek<'a, Owned> for I
+impl<'a, T, I> Peek<'a, I> for I
 where
     T: 'a,
     I: Iterator<Item = T> + AsRef<[T]>,
@@ -13,7 +11,7 @@ where
     }
 }
 
-impl<'a, T, I> PeekBack<'a, Owned> for I
+impl<'a, T, I> PeekBack<'a, I> for I
 where
     T: 'a,
     I: Iterator<Item = T> + AsRef<[T]>,
@@ -25,7 +23,7 @@ where
     }
 }
 
-impl<'a, I, T> PeekIter<'a, Owned> for I
+impl<'a, I, T> PeekIter<'a, I> for I
 where
     T: 'a,
     I: Iterator<Item = T> + AsRef<[T]>,
@@ -37,7 +35,7 @@ where
     }
 }
 
-impl<'a, T, I> Peek<'a, Borrowed> for I
+impl<'a, T, I> Peek<'a, &I> for I
 where
     T: 'a,
     I: Iterator<Item = &'a T> + AsRef<[T]>,
@@ -49,7 +47,7 @@ where
     }
 }
 
-impl<'a, T, I> PeekBack<'a, Borrowed> for I
+impl<'a, T, I> PeekBack<'a, &I> for I
 where
     T: 'a,
     I: Iterator<Item = &'a T> + AsRef<[T]>,
@@ -61,7 +59,7 @@ where
     }
 }
 
-impl<'a, I, T> PeekIter<'a, Borrowed> for I
+impl<'a, I, T> PeekIter<'a, &I> for I
 where
     T: 'a,
     I: Iterator<Item = &'a T> + AsRef<[T]>,
@@ -77,6 +75,7 @@ where
 mod test {
     use crate::{Peek, PeekBack, PeekIter};
     #[test]
+    #[allow(clippy::useless_vec)]
     fn test_vec_into_iter() {
         let vec = vec![1, 2, 3];
         let mut i = vec.into_iter();
@@ -85,6 +84,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::useless_vec)]
     fn test_vec_iter() {
         let vec = vec![1, 2, 3];
         let mut i = vec.iter();
@@ -93,18 +93,20 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::useless_vec)]
     fn test_peek_iter() {
         let vec = vec![1, 2, 3];
         let i = vec.iter();
-        let peeked = i.peek_iter().map(|o| *o).collect::<Vec<_>>();
+        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
 
         assert!(peeked.iter().zip(i).all(|(a, b)| *a == *b))
     }
 
     #[test]
+    #[allow(clippy::useless_vec)]
     fn test_peek_into_iter() {
         let i = vec![1, 2, 3].into_iter();
-        let peeked = i.peek_iter().map(|o| *o).collect::<Vec<_>>();
+        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
 
         assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
     }

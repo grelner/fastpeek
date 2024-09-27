@@ -1,4 +1,4 @@
-use crate::Peek;
+use crate::{Peek, PeekBack};
 
 pub trait PeekAdapters: Iterator + Sized {
     fn cloning_peekable(self) -> CloningPeekableIter<Self> {
@@ -81,6 +81,14 @@ impl<I: Iterator + Clone> Peek<'_, I> for CloningPeekableIter<I> {
     }
 }
 
+impl<I: DoubleEndedIterator + Clone> PeekBack<'_, I> for CloningPeekableIter<I> {
+    type PeekItem = I::Item;
+
+    fn peek_back(&'_ self) -> Option<Self::PeekItem> {
+        self.inner.clone().next_back()
+    }
+}
+
 /// Provide [Peek] by using a similar strategy as [Peekable]. Since self is not mutable in [Peek::peek],
 /// this implementation eagerly fetches the value of next(). While this adapter defeats the main
 /// purpose of this crate, it may be useful in edge cases where you want to compose on [Peek] but
@@ -125,13 +133,14 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{Peek, PeekAdapters};
+    use crate::{Peek, PeekAdapters, PeekBack};
 
     #[test]
     fn test_cloned() {
         let vec = vec![1, 2, 3];
         let mut i = vec.iter().cloning_peekable();
         assert_eq!(i.peek(), i.next());
+        assert_eq!(i.peek_back(), i.next_back());
     }
 
     #[test]

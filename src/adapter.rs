@@ -61,6 +61,7 @@ macro_rules! delegate_double_ended_iter {
 
 /// Provide [Peek] by cloning an iterator and calling next() to peek a value. This is useful
 /// for cheaply cloneable iterators, such as iterators that are backed by slices.
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct CloningPeekableIter<I> {
     inner: I,
 }
@@ -102,6 +103,7 @@ impl<I: Iterator + Clone> PeekIter<'_, I> for CloningPeekableIter<I> {
 /// in [Peek::peek], this implementation eagerly fetches the value of next(). While this adapter
 /// defeats the main purpose of this crate, it may be useful in edge cases where you want to compose
 /// on [Peek] but have no other way of providing it.
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct PrefetchPeekableIter<I: Iterator> {
     inner: I,
     peeked: Option<I::Item>,

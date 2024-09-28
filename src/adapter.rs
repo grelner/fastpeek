@@ -8,59 +8,19 @@ pub trait PeekAdapters: Iterator + Sized {
     fn prefetch_peekable(self) -> PrefetchPeekableIter<Self> {
         PrefetchPeekableIter::new(self)
     }
+
+    fn fn_peekable<F>(self, func: F) -> FnPeekableIter<Self, F>
+    where
+        F: Fn(&Self) -> Option<&Self::Item>,
+    {
+        FnPeekableIter::new(self, func)
+    }
 }
 
 impl<I: Iterator> PeekAdapters for I {}
 
-macro_rules! delegate_iter {
-    ($t:ident) => {
-        impl<I: Iterator> Iterator for $t<I> {
-            type Item = I::Item;
-
-            #[inline(always)]
-            fn next(&mut self) -> Option<Self::Item> {
-                self.inner.next()
-            }
-
-            #[inline(always)]
-            fn size_hint(&self) -> (usize, Option<usize>) {
-                self.inner.size_hint()
-            }
-
-            #[inline(always)]
-            fn fold<B, F>(self, init: B, f: F) -> B
-            where
-                Self: Sized,
-                F: FnMut(B, Self::Item) -> B,
-            {
-                self.inner.fold(init, f)
-            }
-        }
-    };
-}
-
-macro_rules! delegate_double_ended_iter {
-    ($t: ident) => {
-        impl<I: DoubleEndedIterator> DoubleEndedIterator for $t<I> {
-            #[inline(always)]
-            fn next_back(&mut self) -> Option<Self::Item> {
-                self.inner.next_back()
-            }
-
-            #[inline(always)]
-            fn rfold<B, F>(self, init: B, f: F) -> B
-            where
-                Self: Sized,
-                F: FnMut(B, Self::Item) -> B,
-            {
-                self.inner.rfold(init, f)
-            }
-        }
-    };
-}
-
-/// Provide [Peek] by cloning an iterator and calling next() to peek a value. This is useful
-/// for cheaply cloneable iterators, such as iterators that are backed by slices.
+/// Provide [Peek], [PeekBack] and [PeekIter] by cloning an iterator and calling next() to peek a
+/// value. This is useful for cheaply cloneable iterators, such as iterators that are backed by slices.
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct CloningPeekableIter<I> {
     inner: I,
@@ -71,8 +31,43 @@ impl<I> CloningPeekableIter<I> {
         Self { inner: iter }
     }
 }
-delegate_iter!(CloningPeekableIter);
-delegate_double_ended_iter!(CloningPeekableIter);
+impl<I: Iterator> Iterator for CloningPeekableIter<I> {
+    type Item = I::Item;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
+
+    #[inline(always)]
+    fn fold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.inner.fold(init, f)
+    }
+}
+impl<I: DoubleEndedIterator> DoubleEndedIterator for CloningPeekableIter<I> {
+    #[inline(always)]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.inner.next_back()
+    }
+
+    #[inline(always)]
+    fn rfold<B, F>(self, init: B, f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> B,
+    {
+        self.inner.rfold(init, f)
+    }
+}
 impl<I: ExactSizeIterator> ExactSizeIterator for CloningPeekableIter<I> {}
 
 impl<I: Iterator + Clone> Peek<'_, I> for CloningPeekableIter<I> {
@@ -163,6 +158,75 @@ where
     }
 }
 
+/// Provide [Peek] via a function.
+pub struct FnPeekableIter<I, F> {
+    inner: I,
+    func: F,
+}
+
+impl<I, F> FnPeekableIter<I, F> {
+    pub fn new(inner: I, func: F) -> Self {
+        Self { inner, func }
+    }
+}
+
+impl<I: Iterator, F> Iterator for FnPeekableIter<I, F> {
+    type Item = I::Item;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+
+    #[inline(always)]
+    fn fold<B, Fold>(self, init: B, f: Fold) -> B
+    where
+        Self: Sized,
+        Fold: FnMut(B, Self::Item) -> B,
+    {
+        self.inner.fold(init, f)
+    }
+}
+
+impl<I: DoubleEndedIterator, F> DoubleEndedIterator for FnPeekableIter<I, F> {
+    #[inline(always)]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.inner.next_back()
+    }
+
+    #[inline(always)]
+    fn rfold<B, Fold>(self, init: B, f: Fold) -> B
+    where
+        Self: Sized,
+        Fold: FnMut(B, Self::Item) -> B,
+    {
+        self.inner.rfold(init, f)
+    }
+}
+
+impl<I: ExactSizeIterator, F> ExactSizeIterator for FnPeekableIter<I, F> {}
+impl<I: Clone, F: Clone> Clone for FnPeekableIter<I, F> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            func: self.func.clone(),
+        }
+    }
+}
+
+impl<'a, I, F> Peek<'a, I> for FnPeekableIter<I, F>
+where
+    I: Iterator + 'a,
+    I::Item: 'a,
+    F: Fn(&'a I) -> Option<&'a I::Item>,
+{
+    type PeekItem = &'a I::Item;
+
+    fn peek(&'a self) -> Option<Self::PeekItem> {
+        (self.func)(&self.inner)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{Peek, PeekAdapters, PeekBack, PeekIter};
@@ -188,5 +252,12 @@ mod test {
         let vec = [1, 2, 3];
         let mut i = vec.into_iter().prefetch_peekable();
         assert_eq!(i.peek().cloned(), i.next());
+    }
+
+    #[test]
+    fn test_fn() {
+        let vec = [1, 2, 3];
+        let mut i = vec.into_iter().fn_peekable(|o| o.as_slice().first());
+        assert_eq!(i.peek().copied(), i.next());
     }
 }

@@ -78,7 +78,7 @@ mod test {
     #[allow(clippy::useless_vec)]
     fn test_as_ref_into_iter() {
         let vec = &[1, 2, 3];
-        let mut i = vec.into_iter();
+        let mut i = vec.iter();
         assert_eq!(i.peek().cloned(), i.next().cloned());
         assert_eq!(i.peek_back().cloned(), i.next_back().cloned());
     }
@@ -105,7 +105,7 @@ mod test {
     #[test]
     #[allow(clippy::useless_vec)]
     fn test_as_ref_peek_into_iter() {
-        let i = (&[1, 2, 3]).into_iter();
+        let i = [1, 2, 3].iter();
         let peek_i = i.clone();
 
         assert!(i.zip(peek_i.peek_iter()).all(|(a, b)| a == b))

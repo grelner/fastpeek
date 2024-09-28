@@ -21,6 +21,15 @@ impl<I: Iterator> PeekAdapters for I {}
 
 /// Provide [Peek], [PeekBack] and [PeekIter] by cloning an iterator and calling next() to peek a
 /// value. This is useful for cheaply cloneable iterators, such as iterators that are backed by slices.
+///
+/// # Examples
+/// ```
+/// use fastpeek::{Peek, PeekAdapters, PeekBack};
+///
+/// let mut i = [1,2,3].into_iter().cloning_peekable();
+/// assert_eq!(i.peek(), i.next());
+/// assert_eq!(i.peek_back(), i.next_back());
+/// ```
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct CloningPeekableIter<I> {
     inner: I,
@@ -106,6 +115,14 @@ impl<I: Clone> Clone for CloningPeekableIter<I> {
 /// in [Peek::peek], this implementation eagerly fetches the value of next(). While this adapter
 /// defeats the main purpose of this crate, it may be useful in edge cases where you want to compose
 /// on [Peek] but have no other way of providing it.
+///
+/// # Examples
+/// ```
+/// use fastpeek::{Peek, PeekAdapters};
+///
+/// let mut i = [1,2,3].into_iter().prefetch_peekable();
+/// assert_eq!(i.peek().cloned(), i.next());
+/// ```
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct PrefetchPeekableIter<I: Iterator> {
     inner: I,
@@ -159,6 +176,15 @@ where
 }
 
 /// Provide [Peek] via a function.
+///
+/// # Examples
+/// ```
+/// use fastpeek::{Peek, PeekAdapters};
+///
+/// let mut i = [1,2,3].into_iter().fn_peekable(|i| i.as_slice().first());
+/// assert_eq!(i.peek().cloned(), i.next());
+/// ```
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct FnPeekableIter<I, F> {
     inner: I,
     func: F,

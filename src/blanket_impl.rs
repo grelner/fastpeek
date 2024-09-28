@@ -28,7 +28,7 @@ where
     T: 'a,
     I: Iterator<Item = T> + AsRef<[T]>,
 {
-    type Iter = std::slice::Iter<'a, T>;
+    type Iter = core::slice::Iter<'a, T>;
 
     fn peek_iter(&'a self) -> Self::Iter {
         self.as_ref().iter()
@@ -64,7 +64,7 @@ where
     T: 'a,
     I: Iterator<Item = &'a T> + AsRef<[T]>,
 {
-    type Iter = std::slice::Iter<'a, T>;
+    type Iter = core::slice::Iter<'a, T>;
 
     fn peek_iter(&'a self) -> Self::Iter {
         self.as_ref().iter()
@@ -76,17 +76,17 @@ mod test {
     use crate::{Peek, PeekBack, PeekIter};
     #[test]
     #[allow(clippy::useless_vec)]
-    fn test_vec_into_iter() {
-        let vec = vec![1, 2, 3];
+    fn test_as_ref_into_iter() {
+        let vec = &[1, 2, 3];
         let mut i = vec.into_iter();
-        assert_eq!(i.peek().cloned(), i.next());
-        assert_eq!(i.peek_back().cloned(), i.next_back());
+        assert_eq!(i.peek().cloned(), i.next().cloned());
+        assert_eq!(i.peek_back().cloned(), i.next_back().cloned());
     }
 
     #[test]
     #[allow(clippy::useless_vec)]
-    fn test_vec_iter() {
-        let vec = vec![1, 2, 3];
+    fn test_as_ref_iter() {
+        let vec = &[1, 2, 3];
         let mut i = vec.iter();
         assert_eq!(i.peek().cloned(), i.next().cloned());
         assert_eq!(i.peek_back().cloned(), i.next_back().cloned());
@@ -94,20 +94,20 @@ mod test {
 
     #[test]
     #[allow(clippy::useless_vec)]
-    fn test_peek_iter() {
-        let vec = vec![1, 2, 3];
-        let i = vec.iter();
-        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
-
-        assert!(peeked.iter().zip(i).all(|(a, b)| *a == *b))
+    fn test_as_ref_peek_iter() {
+        let vec = &[1, 2, 3];
+        assert!(vec
+            .iter()
+            .zip(vec.iter().peek_iter())
+            .all(|(a, b)| *a == *b));
     }
 
     #[test]
     #[allow(clippy::useless_vec)]
-    fn test_peek_into_iter() {
-        let i = vec![1, 2, 3].into_iter();
-        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
+    fn test_as_ref_peek_into_iter() {
+        let i = (&[1, 2, 3]).into_iter();
+        let peek_i = i.clone();
 
-        assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
+        assert!(i.zip(peek_i.peek_iter()).all(|(a, b)| a == b))
     }
 }

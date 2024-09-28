@@ -99,6 +99,14 @@ impl<I: Iterator + Clone> PeekIter<'_, I> for CloningPeekableIter<I> {
     }
 }
 
+impl<I: Clone> Clone for CloningPeekableIter<I> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
 /// Provide [Peek] by using a similar strategy as [std::iter::Peekable]. Since self is not mutable
 /// in [Peek::peek], this implementation eagerly fetches the value of next(). While this adapter
 /// defeats the main purpose of this crate, it may be useful in edge cases where you want to compose
@@ -124,7 +132,7 @@ impl<I: Iterator> Iterator for PrefetchPeekableIter<I> {
             None
         } else {
             let mut result = self.inner.next();
-            std::mem::swap(&mut self.peeked, &mut result);
+            core::mem::swap(&mut self.peeked, &mut result);
             result
         }
     }
@@ -142,6 +150,19 @@ where
     }
 }
 
+impl<I> Clone for PrefetchPeekableIter<I>
+where
+    I: Iterator + Clone,
+    I::Item: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            peeked: self.peeked.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{Peek, PeekAdapters, PeekBack, PeekIter};
@@ -155,11 +176,11 @@ mod test {
     }
 
     #[test]
-    fn test_cloned_iter() {
+    fn test_cloned_peek_iter() {
         let i = [1, 2, 3].into_iter().cloning_peekable();
-        let peeked = i.peek_iter().collect::<Vec<_>>();
+        let i2 = i.clone();
 
-        assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
+        assert!(i.zip(i2.peek_iter()).all(|(a, b)| a == b));
     }
 
     #[test]

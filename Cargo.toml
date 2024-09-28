@@ -8,7 +8,7 @@ description = "A different way to peek iterators"
 
 readme = "README.md"
 keywords = ["iterator", "peek"]
-categories = ["rust-patterns"]
+categories = ["rust-patterns", "no-std", "no-std::no-alloc"]
 
 license = "MIT OR Apache-2.0"
 

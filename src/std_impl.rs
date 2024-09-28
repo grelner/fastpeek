@@ -1,6 +1,6 @@
 use crate::{Peek, PeekBack, PeekIter};
 
-impl<'a, T: 'a, const N: usize> Peek<'a, ()> for std::array::IntoIter<T, N> {
+impl<'a, T: 'a, const N: usize> Peek<'a, ()> for core::array::IntoIter<T, N> {
     type PeekItem = &'a T;
 
     fn peek(&'a self) -> Option<Self::PeekItem> {
@@ -8,7 +8,7 @@ impl<'a, T: 'a, const N: usize> Peek<'a, ()> for std::array::IntoIter<T, N> {
     }
 }
 
-impl<'a, T: 'a, const N: usize> PeekBack<'a, ()> for std::array::IntoIter<T, N> {
+impl<'a, T: 'a, const N: usize> PeekBack<'a, ()> for core::array::IntoIter<T, N> {
     type PeekItem = &'a T;
 
     fn peek_back(&'a self) -> Option<Self::PeekItem> {
@@ -16,8 +16,8 @@ impl<'a, T: 'a, const N: usize> PeekBack<'a, ()> for std::array::IntoIter<T, N> 
     }
 }
 
-impl<'a, T: 'a, const N: usize> PeekIter<'a, ()> for std::array::IntoIter<T, N> {
-    type Iter = std::slice::Iter<'a, T>;
+impl<'a, T: 'a, const N: usize> PeekIter<'a, ()> for core::array::IntoIter<T, N> {
+    type Iter = core::slice::Iter<'a, T>;
 
     fn peek_iter(&'a self) -> Self::Iter {
         self.as_slice().iter()
@@ -28,7 +28,7 @@ impl<'a, T: 'a, const N: usize> PeekIter<'a, ()> for std::array::IntoIter<T, N> 
 mod test {
     use crate::{Peek, PeekBack, PeekIter};
     #[test]
-    fn test_vec_into_iter() {
+    fn test_array_into_iter() {
         let vec = [1, 2, 3];
         let mut i = vec.into_iter();
         assert_eq!(i.peek().cloned(), i.next());
@@ -36,27 +36,11 @@ mod test {
     }
 
     #[test]
-    fn test_vec_iter() {
+    fn test_array_peek_into_iter() {
         let vec = [1, 2, 3];
-        let mut i = vec.iter();
-        assert_eq!(i.peek().cloned(), i.next().cloned());
-        assert_eq!(i.peek_back().cloned(), i.next_back().cloned());
-    }
+        let i = vec.into_iter();
+        let i2 = i.clone();
 
-    #[test]
-    fn test_peek_iter() {
-        let vec = [1, 2, 3];
-        let i = vec.iter();
-        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
-
-        assert!(peeked.iter().zip(i).all(|(a, b)| *a == *b))
-    }
-
-    #[test]
-    fn test_peek_into_iter() {
-        let i = [1, 2, 3].into_iter();
-        let peeked = i.peek_iter().copied().collect::<Vec<_>>();
-
-        assert!(peeked.iter().zip(i).all(|(a, b)| *a == b))
+        assert!(i.zip(i2.peek_iter()).all(|(a, b)| a == *b));
     }
 }

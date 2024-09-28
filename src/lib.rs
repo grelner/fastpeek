@@ -1,8 +1,11 @@
+#![no_std]
 mod adapter;
 mod blanket_impl;
 mod std_impl;
 
 pub use adapter::*;
+
+extern crate core;
 
 /// A trait for peeking the next value of an iterator.
 pub trait Peek<'a, T>: Iterator {

@@ -16,7 +16,7 @@ extern crate core;
 /// let mut i = [1,2,3].into_iter();
 /// assert_eq!(i.peek().copied(), i.next());
 /// ```
-pub trait Peek<'a, T>: Iterator {
+pub trait Peek<'a, I>: Iterator {
     type PeekItem;
     fn peek(&'a self) -> Option<Self::PeekItem>;
 }
@@ -30,7 +30,7 @@ pub trait Peek<'a, T>: Iterator {
 /// let mut i = [1,2,3].into_iter();
 /// assert_eq!(i.peek_back().copied(), i.next_back());
 /// ```
-pub trait PeekBack<'a, T>: Iterator {
+pub trait PeekBack<'a, I>: Iterator {
     type PeekItem;
     fn peek_back(&'a self) -> Option<Self::PeekItem>;
 }
@@ -44,7 +44,7 @@ pub trait PeekBack<'a, T>: Iterator {
 /// let mut i = [1,2,3].into_iter();
 /// assert!(i.clone().peek_iter().zip(i).all(|(a,b)| *a == b));
 /// ```
-pub trait PeekIter<'a, T>: Iterator {
+pub trait PeekIter<'a, I>: Iterator {
     type Iter: Iterator;
     fn peek_iter(&'a self) -> Self::Iter;
 }
